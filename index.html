@@ -84,7 +84,7 @@
   </header>
 
   <div id="setupBanner" style="display:none" class="setup-banner">
-    Set your Apps Script Web App URL in the <code>API_URL</code> constant near the top of the &lt;script&gt; tag before using this page.
+    Set your Apps Script Web App URL in <code>API_URL</code> and your shared token in <code>API_TOKEN</code>, near the top of the &lt;script&gt; tag, before using this page.
   </div>
 
   <div class="panel">
@@ -144,6 +144,8 @@
 // ─────────────────────────────────────────────────────────────
 // PASTE YOUR APPS SCRIPT WEB APP URL HERE (ends in /exec)
 const API_URL = 'https://script.google.com/macros/s/AKfycbxmUJjsJlUfSaHfC3BAL0pZ7_2H0onwVN0e3gZuy3mvBaCHsGObrsIrx76lwEBlhqFg2A/exec';
+// PASTE THE SAME SECRET YOU SET AS SHARED_SECRET IN Code.gs
+const API_TOKEN = 'afta-cplog-2024x';
 // ─────────────────────────────────────────────────────────────
 
 let complaints = [];
@@ -167,7 +169,8 @@ function statusClass(status){
 }
 
 function apiConfigured(){
-  return API_URL && API_URL.indexOf('PASTE_YOUR') === -1;
+  return API_URL && API_URL.indexOf('PASTE_YOUR') === -1
+    && API_TOKEN && API_TOKEN.indexOf('CHANGE-THIS') === -1;
 }
 
 async function loadComplaints(){
@@ -178,8 +181,12 @@ async function loadComplaints(){
     return;
   }
   try{
-    const res = await fetch(API_URL);
+    const res = await fetch(API_URL + '?token=' + encodeURIComponent(API_TOKEN));
     const data = await res.json();
+    if(data && data.ok === false){
+      document.getElementById('list').innerHTML = '<div class="empty">Not authorized — check that API_TOKEN matches SHARED_SECRET in Code.gs.</div>';
+      return;
+    }
     complaints = Array.isArray(data) ? data : [];
     complaints.sort((a,b)=> (b.dateReceived||'').localeCompare(a.dateReceived||'') || (b.id||'').localeCompare(a.id||''));
   }catch(e){
@@ -194,7 +201,7 @@ async function apiPost(payload){
   const res = await fetch(API_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify(payload)
+    body: JSON.stringify(Object.assign({ token: API_TOKEN }, payload))
   });
   return res.json();
 }
