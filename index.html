@@ -132,7 +132,20 @@
       <option value="In Progress">In Progress</option>
       <option value="Closed">Closed</option>
     </select>
+    <select id="filterCategory">
+      <option value="">All categories</option>
+      <option>Course Delays</option><option>Customer Service</option><option>No Response to contact</option>
+      <option>Flight Bookings</option><option>Ground School</option><option>Instructor</option>
+      <option>Operations</option><option>Scheduling</option><option>Aircraft Availability</option>
+      <option>Finance/Billing</option><option>Administration</option><option>Facilities</option>
+      <option>IT Systems</option><option>Simulators</option><option>Other</option>
+    </select>
+    <select id="filterReceivedBy"><option value="">All received by</option></select>
+    <select id="filterAssigned"><option value="">All assigned to</option></select>
     <input class="grow" id="filterText" placeholder="Search name, student, category, summary...">
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);white-space:nowrap;">
+      <input type="checkbox" id="filterUnresolved"> Only unresolved
+    </label>
     <button class="btn-ghost" id="refreshBtn" type="button">Refresh</button>
   </div>
 
@@ -193,7 +206,23 @@ async function loadComplaints(){
     document.getElementById('list').innerHTML = '<div class="empty">Could not reach the sheet. Check the connection and try Refresh.</div>';
     return;
   }
+  populateNameFilters();
   render();
+}
+
+function populateNameFilters(){
+  const receivedBySel = document.getElementById('filterReceivedBy');
+  const assignedSel = document.getElementById('filterAssigned');
+  const keepReceived = receivedBySel.value;
+  const keepAssigned = assignedSel.value;
+
+  const receivedByNames = [...new Set(complaints.map(c=>c.receivedBy).filter(Boolean))].sort();
+  const assignedNames = [...new Set(complaints.map(c=>c.assignedTo).filter(Boolean))].sort();
+
+  receivedBySel.innerHTML = '<option value="">All received by</option>' +
+    receivedByNames.map(n=>`<option ${n===keepReceived?'selected':''}>${escapeHtml(n)}</option>`).join('');
+  assignedSel.innerHTML = '<option value="">All assigned to</option>' +
+    assignedNames.map(n=>`<option ${n===keepAssigned?'selected':''}>${escapeHtml(n)}</option>`).join('');
 }
 
 // text/plain avoids a CORS preflight that Apps Script does not handle
@@ -219,10 +248,18 @@ function renderStats(){
 function render(){
   renderStats();
   const statusFilter = document.getElementById('filterStatus').value;
+  const categoryFilter = document.getElementById('filterCategory').value;
+  const receivedByFilter = document.getElementById('filterReceivedBy').value;
+  const assignedFilter = document.getElementById('filterAssigned').value;
   const textFilter = document.getElementById('filterText').value.toLowerCase().trim();
+  const unresolvedOnly = document.getElementById('filterUnresolved').checked;
 
   let filtered = complaints.filter(c=>{
+    if(unresolvedOnly && c.status === 'Closed') return false;
     if(statusFilter && c.status !== statusFilter) return false;
+    if(categoryFilter && c.category !== categoryFilter) return false;
+    if(receivedByFilter && c.receivedBy !== receivedByFilter) return false;
+    if(assignedFilter && c.assignedTo !== assignedFilter) return false;
     if(textFilter){
       const hay = [c.complainant, c.student, c.category, c.summary, c.relationship, c.assignedTo].join(' ').toLowerCase();
       if(!hay.includes(textFilter)) return false;
@@ -318,6 +355,7 @@ function bindDetailHandlers(){
       if(!res.ok) throw new Error(res.error || 'save failed');
       Object.assign(c, updated);
       showToast('Saved');
+      populateNameFilters();
       render();
     }catch(err){
       showToast('Could not save — try again');
@@ -384,6 +422,7 @@ document.getElementById('saveComplaint').addEventListener('click', async ()=>{
     complaints.unshift(entry);
     document.getElementById('clearForm').click();
     showToast('Complaint logged');
+    populateNameFilters();
     render();
   }catch(e){
     showToast('Could not save — try again');
@@ -392,7 +431,11 @@ document.getElementById('saveComplaint').addEventListener('click', async ()=>{
 });
 
 document.getElementById('filterStatus').addEventListener('change', render);
+document.getElementById('filterCategory').addEventListener('change', render);
+document.getElementById('filterReceivedBy').addEventListener('change', render);
+document.getElementById('filterAssigned').addEventListener('change', render);
 document.getElementById('filterText').addEventListener('input', render);
+document.getElementById('filterUnresolved').addEventListener('change', render);
 document.getElementById('refreshBtn').addEventListener('click', loadComplaints);
 
 loadComplaints();
