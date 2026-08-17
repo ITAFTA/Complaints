@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>AFTA Complaint Log</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#152238; --navy-2:#1f3350; --paper:#F5F4EF; --panel:#FFFFFF; --ink:#1B2027;
+    --muted:#68707B; --line:#E1DFD6; --amber:#D98E04; --amber-bg:#FCF0D8;
+    --blue:#2B5A8C; --blue-bg:#E4EDF5; --green:#2F7D4F; --green-bg:#E4F1E8; --red:#B23A2F;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:980px;margin:0 auto;padding:28px 20px 80px;}
+  header{display:flex;align-items:flex-end;justify-content:space-between;border-bottom:2px solid var(--navy);padding-bottom:14px;margin-bottom:22px;gap:16px;flex-wrap:wrap;}
+  .brand-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);margin-bottom:4px;}
+  h1{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:700;margin:0;color:var(--navy);}
+  .stats{display:flex;gap:10px;}
+  .stat{font-family:'IBM Plex Mono',monospace;text-align:center;padding:6px 14px;border:1px solid var(--line);border-radius:4px;background:var(--panel);min-width:64px;}
+  .stat b{display:block;font-size:20px;color:var(--navy);}
+  .stat span{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;margin-bottom:24px;}
+  .panel-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);cursor:pointer;}
+  .panel-head h2{font-family:'Space Grotesk',sans-serif;font-size:15px;margin:0;color:var(--navy);}
+  .panel-head .chev{font-size:12px;color:var(--muted);}
+  .panel-body{padding:18px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field.full{grid-column:1/-1;}
+  label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
+  input,select,textarea{font-family:'Inter',sans-serif;font-size:14px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:#FCFCFA;color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--navy-2);outline-offset:0;border-color:var(--navy-2);}
+  textarea{resize:vertical;min-height:64px;font-family:'Inter',sans-serif;}
+  .submit-row{display:flex;justify-content:flex-end;margin-top:16px;gap:10px;}
+  button{font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;padding:10px 20px;border-radius:4px;border:none;cursor:pointer;}
+  .btn-primary{background:var(--navy);color:#fff;}
+  .btn-primary:hover{background:var(--navy-2);}
+  .btn-ghost{background:transparent;color:var(--navy);border:1px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--navy);}
+  .filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+  .filters select,.filters input{padding:7px 9px;font-size:13px;}
+  .filters .grow{flex:1;min-width:160px;}
+  .strip{display:grid;grid-template-columns:96px 1fr 130px 20px;align-items:center;gap:14px;background:#FCFCFA;border:1px solid var(--line);border-left:5px solid var(--muted);border-radius:3px;padding:11px 14px;margin-bottom:8px;cursor:pointer;transition:box-shadow .12s;}
+  .strip:hover{box-shadow:0 1px 4px rgba(21,34,56,.1);}
+  .strip.status-open{border-left-color:var(--amber);}
+  .strip.status-progress{border-left-color:var(--blue);}
+  .strip.status-closed{border-left-color:var(--green);}
+  .strip-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--muted);}
+  .strip-main .name{font-weight:600;font-size:14px;}
+  .strip-main .meta{font-size:12px;color:var(--muted);margin-top:2px;}
+  .badge{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;padding:4px 9px;border-radius:3px;text-align:center;white-space:nowrap;font-weight:600;}
+  .badge.status-open{background:var(--amber-bg);color:var(--amber);}
+  .badge.status-progress{background:var(--blue-bg);color:var(--blue);}
+  .badge.status-closed{background:var(--green-bg);color:var(--green);}
+  .strip-chev{color:var(--muted);font-size:12px;}
+  .detail{border:1px solid var(--line);border-top:none;border-radius:0 0 3px 3px;margin-top:-8px;margin-bottom:8px;padding:16px;background:#fff;}
+  .detail-row{display:flex;gap:16px;margin-bottom:10px;flex-wrap:wrap;}
+  .detail-row .field{flex:1;min-width:150px;}
+  .detail p.summary{font-size:13.5px;line-height:1.5;background:var(--paper);padding:10px;border-radius:4px;border:1px solid var(--line);}
+  .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px;}
+  .loading{text-align:center;color:var(--muted);padding:30px;font-size:13px;font-family:'IBM Plex Mono',monospace;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:5px;font-size:13px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;font-family:'Space Grotesk',sans-serif;}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  .setup-banner{background:#FDECEC;border:1px solid #E8B4AE;color:var(--red);padding:12px 16px;border-radius:5px;font-size:13px;margin-bottom:20px;font-family:'IBM Plex Mono',monospace;}
+  @media(max-width:640px){
+    .grid{grid-template-columns:1fr;}
+    .strip{grid-template-columns:1fr 20px;grid-template-rows:auto auto;}
+    .strip-date{order:3;}
+    .badge{order:2;justify-self:start;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <div class="brand-eyebrow">AFTA · Student Services</div>
+      <h1>Complaint Log</h1>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div id="setupBanner" style="display:none" class="setup-banner">
+    Set your Apps Script Web App URL in the <code>API_URL</code> constant near the top of the &lt;script&gt; tag before using this page.
+  </div>
+
+  <div class="panel">
+    <div class="panel-head" id="formToggle">
+      <h2>+ Log a new complaint</h2>
+      <span class="chev" id="formChev">▾</span>
+    </div>
+    <div class="panel-body" id="formBody">
+      <div class="grid">
+        <div class="field"><label>Date received</label><input type="date" id="f_date"></div>
+        <div class="field"><label>Received by</label><input type="text" id="f_receivedBy" placeholder="Your name"></div>
+        <div class="field"><label>Complainant name</label><input type="text" id="f_complainant" placeholder="Who called in"></div>
+        <div class="field">
+          <label>Relationship to academy</label>
+          <select id="f_relationship">
+            <option>Student</option><option>Parent</option><option>Customer</option>
+            <option>Supplier</option><option>Staff member</option><option>Member of the public</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Student name (if relevant)</label><input type="text" id="f_student" placeholder="Leave blank if n/a"></div>
+        <div class="field">
+          <label>Complaint category</label>
+          <select id="f_category">
+            <option>Course Delays</option><option>Customer Service</option><option>No Response to contact</option>
+            <option>Flight Bookings</option><option>Ground School</option><option>Instructor</option>
+            <option>Operations</option><option>Scheduling</option><option>Aircraft Availability</option>
+            <option>Finance/Billing</option><option>Administration</option><option>Facilities</option>
+            <option>IT Systems</option><option>Simulators</option><option>Other</option>
+          </select>
+        </div>
+        <div class="field"><label>Assigned to</label><input type="text" id="f_assigned" placeholder="Optional, can set later"></div>
+        <div class="field full"><label>Complaint summary</label><textarea id="f_summary" placeholder="What did they say, in their own words where possible"></textarea></div>
+      </div>
+      <div class="submit-row">
+        <button class="btn-ghost" id="clearForm" type="button">Clear</button>
+        <button class="btn-primary" id="saveComplaint" type="button">Log complaint</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="Open">Open</option>
+      <option value="In Progress">In Progress</option>
+      <option value="Closed">Closed</option>
+    </select>
+    <input class="grow" id="filterText" placeholder="Search name, student, category, summary...">
+    <button class="btn-ghost" id="refreshBtn" type="button">Refresh</button>
+  </div>
+
+  <div id="list"><div class="loading">Loading log…</div></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+// PASTE YOUR APPS SCRIPT WEB APP URL HERE (ends in /exec)
+const API_URL = 'https://script.google.com/macros/s/AKfycbxmUJjsJlUfSaHfC3BAL0pZ7_2H0onwVN0e3gZuy3mvBaCHsGObrsIrx76lwEBlhqFg2A/exec';
+// ─────────────────────────────────────────────────────────────
+
+let complaints = [];
+let expandedId = null;
+
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+document.getElementById('f_date').value = todayStr();
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1800);
+}
+
+function statusClass(status){
+  if(status === 'Open') return 'status-open';
+  if(status === 'In Progress') return 'status-progress';
+  if(status === 'Closed') return 'status-closed';
+  return '';
+}
+
+function apiConfigured(){
+  return API_URL && API_URL.indexOf('PASTE_YOUR') === -1;
+}
+
+async function loadComplaints(){
+  if(!apiConfigured()){
+    document.getElementById('setupBanner').style.display = 'block';
+    document.getElementById('list').innerHTML = '<div class="empty">Not connected yet.</div>';
+    renderStats();
+    return;
+  }
+  try{
+    const res = await fetch(API_URL);
+    const data = await res.json();
+    complaints = Array.isArray(data) ? data : [];
+    complaints.sort((a,b)=> (b.dateReceived||'').localeCompare(a.dateReceived||'') || (b.id||'').localeCompare(a.id||''));
+  }catch(e){
+    document.getElementById('list').innerHTML = '<div class="empty">Could not reach the sheet. Check the connection and try Refresh.</div>';
+    return;
+  }
+  render();
+}
+
+// text/plain avoids a CORS preflight that Apps Script does not handle
+async function apiPost(payload){
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify(payload)
+  });
+  return res.json();
+}
+
+function renderStats(){
+  const counts = {Open:0, 'In Progress':0, Closed:0};
+  complaints.forEach(c=>{ if(counts[c.status] !== undefined) counts[c.status]++; });
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><b>${counts.Open}</b><span>Open</span></div>
+    <div class="stat"><b>${counts['In Progress']}</b><span>In progress</span></div>
+    <div class="stat"><b>${counts.Closed}</b><span>Closed</span></div>
+  `;
+}
+
+function render(){
+  renderStats();
+  const statusFilter = document.getElementById('filterStatus').value;
+  const textFilter = document.getElementById('filterText').value.toLowerCase().trim();
+
+  let filtered = complaints.filter(c=>{
+    if(statusFilter && c.status !== statusFilter) return false;
+    if(textFilter){
+      const hay = [c.complainant, c.student, c.category, c.summary, c.relationship, c.assignedTo].join(' ').toLowerCase();
+      if(!hay.includes(textFilter)) return false;
+    }
+    return true;
+  });
+
+  const list = document.getElementById('list');
+  if(filtered.length === 0){
+    list.innerHTML = '<div class="empty">No complaints logged yet. Use the form above to add the first one.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(c=>{
+    const sc = statusClass(c.status);
+    const isOpen = expandedId === c.id;
+    let html = `
+      <div class="strip ${sc}" data-id="${c.id}">
+        <div class="strip-date">${c.dateReceived||''}</div>
+        <div class="strip-main">
+          <div class="name">${escapeHtml(c.complainant || '(no name)')}${c.student ? ' · student: '+escapeHtml(c.student) : ''}</div>
+          <div class="meta">${escapeHtml(c.category||'—')} · ${escapeHtml(c.relationship||'—')}</div>
+        </div>
+        <div class="badge ${sc}">${c.status}</div>
+        <div class="strip-chev">${isOpen ? '▴' : '▾'}</div>
+      </div>
+    `;
+    if(isOpen){ html += renderDetail(c); }
+    return html;
+  }).join('');
+
+  list.querySelectorAll('.strip').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      const id = el.getAttribute('data-id');
+      expandedId = (expandedId === id) ? null : id;
+      render();
+    });
+  });
+
+  if(expandedId){ bindDetailHandlers(); }
+}
+
+function renderDetail(c){
+  return `
+    <div class="detail" data-detail-id="${c.id}">
+      <p class="summary">${escapeHtml(c.summary || '(no summary recorded)')}</p>
+      <div class="detail-row">
+        <div class="field">
+          <label>Status</label>
+          <select class="d_status">
+            <option ${c.status==='Open'?'selected':''}>Open</option>
+            <option ${c.status==='In Progress'?'selected':''}>In Progress</option>
+            <option ${c.status==='Closed'?'selected':''}>Closed</option>
+          </select>
+        </div>
+        <div class="field"><label>Assigned to</label><input class="d_assigned" type="text" value="${escapeAttr(c.assignedTo||'')}"></div>
+        <div class="field"><label>Date of acknowledgment</label><input class="d_ack" type="date" value="${c.dateAck||''}"></div>
+        <div class="field"><label>Date closed</label><input class="d_closed" type="date" value="${c.dateClosed||''}"></div>
+      </div>
+      <div class="field full" style="margin-bottom:10px;">
+        <label>Resolution notes</label>
+        <textarea class="d_resolution">${escapeHtml(c.resolution||'')}</textarea>
+      </div>
+      <div class="submit-row">
+        <button class="btn-ghost d_close" type="button">Collapse</button>
+        <button class="btn-primary d_save" type="button">Save changes</button>
+      </div>
+    </div>
+  `;
+}
+
+function bindDetailHandlers(){
+  const wrap = document.querySelector(`[data-detail-id="${expandedId}"]`);
+  if(!wrap) return;
+  wrap.querySelector('.d_close').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    expandedId = null;
+    render();
+  });
+  wrap.querySelector('.d_save').addEventListener('click', async (e)=>{
+    e.stopPropagation();
+    const c = complaints.find(x=>x.id === expandedId);
+    if(!c) return;
+    const updated = Object.assign({}, c, {
+      status: wrap.querySelector('.d_status').value,
+      assignedTo: wrap.querySelector('.d_assigned').value.trim(),
+      dateAck: wrap.querySelector('.d_ack').value,
+      dateClosed: wrap.querySelector('.d_closed').value,
+      resolution: wrap.querySelector('.d_resolution').value.trim()
+    });
+    try{
+      const res = await apiPost({ action: 'update', entry: updated });
+      if(!res.ok) throw new Error(res.error || 'save failed');
+      Object.assign(c, updated);
+      showToast('Saved');
+      render();
+    }catch(err){
+      showToast('Could not save — try again');
+    }
+  });
+  wrap.addEventListener('click', e=>e.stopPropagation());
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function escapeAttr(s){ return escapeHtml(s); }
+
+document.getElementById('formToggle').addEventListener('click', ()=>{
+  const body = document.getElementById('formBody');
+  const chev = document.getElementById('formChev');
+  const collapsed = body.style.display === 'none';
+  body.style.display = collapsed ? '' : 'none';
+  chev.textContent = collapsed ? '▾' : '▸';
+});
+
+document.getElementById('clearForm').addEventListener('click', ()=>{
+  document.getElementById('f_date').value = todayStr();
+  document.getElementById('f_receivedBy').value = '';
+  document.getElementById('f_complainant').value = '';
+  document.getElementById('f_relationship').selectedIndex = 0;
+  document.getElementById('f_student').value = '';
+  document.getElementById('f_category').selectedIndex = 0;
+  document.getElementById('f_assigned').value = '';
+  document.getElementById('f_summary').value = '';
+});
+
+document.getElementById('saveComplaint').addEventListener('click', async ()=>{
+  if(!apiConfigured()){
+    showToast('Set the API_URL first — see the banner above');
+    return;
+  }
+  const complainant = document.getElementById('f_complainant').value.trim();
+  const summary = document.getElementById('f_summary').value.trim();
+  if(!complainant || !summary){
+    showToast('Add at least a name and a summary');
+    return;
+  }
+  const btn = document.getElementById('saveComplaint');
+  btn.disabled = true;
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,7),
+    dateReceived: document.getElementById('f_date').value || todayStr(),
+    receivedBy: document.getElementById('f_receivedBy').value.trim(),
+    complainant: complainant,
+    relationship: document.getElementById('f_relationship').value,
+    student: document.getElementById('f_student').value.trim(),
+    category: document.getElementById('f_category').value,
+    assignedTo: document.getElementById('f_assigned').value.trim(),
+    summary: summary,
+    status: 'Open',
+    dateAck: '',
+    resolution: '',
+    dateClosed: ''
+  };
+  try{
+    const res = await apiPost({ action: 'add', entry });
+    if(!res.ok) throw new Error(res.error || 'save failed');
+    complaints.unshift(entry);
+    document.getElementById('clearForm').click();
+    showToast('Complaint logged');
+    render();
+  }catch(e){
+    showToast('Could not save — try again');
+  }
+  btn.disabled = false;
+});
+
+document.getElementById('filterStatus').addEventListener('change', render);
+document.getElementById('filterText').addEventListener('input', render);
+document.getElementById('refreshBtn').addEventListener('click', loadComplaints);
+
+loadComplaints();
+</script>
+</body>
+</html>
